@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Timer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #121212; /* Dark background */
+      color: #f5f5f5; /* Light text */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 10px 0;
+      color: #76c7c0;
+      font-size: 2rem;
+    }
+
+    #current-time {
+      font-size: 1.2rem;
+      margin: 5px 0;
+      color: #e0e0e0;
+    }
+
+    #progress-container {
+      width: 90%;
+      max-width: 600px;
+      height: 25px;
+      background-color: #333333; /* Progress bar background */
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0;
+      transition: width 0.5s ease-in-out;
+    }
+
+    #time-left {
+      font-size: 1.5rem;
+      color: #f5f5f5;
+      margin: 10px 0;
+    }
+
+    .quote {
+      margin-top: 20px;
+      font-size: 1rem;
+      font-style: italic;
+      color: #a5a5a5;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      #current-time {
+        font-size: 1rem;
+      }
+
+      #progress-container {
+        height: 20px;
+      }
+
+      #time-left {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Focus Timer</h1>
+  <div id="current-time">Loading...</div>
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+  <div id="time-left">Calculating time left...</div>
+  <div class="quote" id="motivational-quote">Stay productive and focused!</div>
+
+  <script>
+    const startHour = 11; // Start time: 11 AM
+    const endHour = 2; // End time: 2 AM
+    const timezoneOffset = 5.5 * 60 * 60 * 1000; // Indian Standard Time (IST)
+
+    const quotes = [
+      "Every second counts. Make it matter!",
+      "Stay focused and achieve greatness.",
+      "You are closer to your goals than you think.",
+      "One step at a time, one moment at a time.",
+      "Great things take time. Keep going!"
+    ];
+
+    function getCurrentISTTime() {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      return new Date(utc + timezoneOffset);
+    }
+
+    function calculateProgress(currentTime) {
+      const start = new Date(currentTime);
+      start.setHours(startHour, 0, 0, 0);
+
+      const end = new Date(currentTime);
+      if (currentTime.getHours() < startHour) {
+        // Adjust for cases before 11 AM (use yesterday's start time)
+        start.setDate(start.getDate() - 1);
+        end.setDate(start.getDate() + 1);
+      } else if (currentTime.getHours() >= startHour) {
+        // Adjust for cases after 11 AM
+        end.setDate(start.getDate() + 1);
+      }
+      end.setHours(endHour, 0, 0, 0);
+
+      const elapsedTime = currentTime - start;
+      const totalTime = end - start;
+
+      const percentage = Math.min(Math.max((elapsedTime / totalTime) * 100, 0), 100);
+      const remainingTime = Math.max((end - currentTime), 0); // Remaining in milliseconds
+      return { percentage, remainingTime };
+    }
+
+    function getBarColor(currentTime) {
+      const hour = currentTime.getHours();
+      if (hour >= 11 && hour < 14) {
+        return "#4caf50"; // Green
+      } else if (hour >= 14 && hour < 18) {
+        return "#ff9800"; // Orange
+      } else {
+        return "#f44336"; // Red
+      }
+    }
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      const milliseconds = String(ms % 1000).padStart(3, "0");
+      return `${hours}:${minutes}:${seconds}:${milliseconds}`;
+    }
+
+    function updateTimer() {
+      const currentTime = getCurrentISTTime();
+      document.getElementById("current-time").textContent = `Current Time: ${currentTime.toLocaleTimeString("en-IN", { hour12: true })}`;
+
+      const { percentage, remainingTime } = calculateProgress(currentTime);
+      const progressBar = document.getElementById("progress-bar");
+
+      progressBar.style.width = `${percentage}%`;
+      progressBar.style.backgroundColor = getBarColor(currentTime);
+
+      document.getElementById("time-left").textContent =
+        remainingTime > 0
+          ? `Time Left: ${formatTime(remainingTime)}`
+          : "Timer Ended. Great job today!";
+
+      setTimeout(updateTimer, 50); // Update every 50ms for smooth countdown
+    }
+
+    function updateQuote() {
+      const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+      document.getElementById("motivational-quote").textContent = randomQuote;
+    }
+
+    // Initialize
+    updateTimer();
+    updateQuote();
+    setInterval(updateQuote, 60000 * 60); // Update quote every hour
+  </script>
+</body>
+</html>
