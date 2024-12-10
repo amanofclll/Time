@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Focus Timer</title>
+  <title>Work Hard, Play Harder!!</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -61,6 +61,82 @@
       text-align: center;
     }
 
+    /* Task List Styles */
+    #task-list-container {
+      width: 90%;
+      max-width: 600px;
+      margin-top: 30px;
+      text-align: left;
+      display: none;
+    }
+
+    #task-input {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+
+    #add-task-btn {
+      padding: 8px 12px; /* Smaller button */
+      font-size: 1rem;
+      background-color: #76c7c0;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #add-task-btn:hover {
+      background-color: #64b4b0;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .task-item input {
+      margin-right: 10px;
+    }
+
+    .task-item span {
+      font-size: 1rem;
+      color: #f5f5f5;
+      text-decoration: none;
+    }
+
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .delete-btn:hover {
+      background-color: #e53935;
+    }
+
+    .toggle-btn {
+      padding: 8px 12px; /* Smaller button */
+      font-size: 1rem;
+      background-color: #ff5722;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 20px 0;
+    }
+
+    .toggle-btn:hover {
+      background-color: #f44336;
+    }
+
+    /* Media Queries */
     @media (max-width: 768px) {
       h1 {
         font-size: 1.5rem;
@@ -81,7 +157,7 @@
   </style>
 </head>
 <body>
-  <h1>Focus Timer</h1>
+  <h1>Work Hard, Play Harder!!</h1>
   <div id="current-time">Loading...</div>
   <div id="progress-container">
     <div id="progress-bar"></div>
@@ -89,17 +165,28 @@
   <div id="time-left">Calculating time left...</div>
   <div class="quote" id="motivational-quote">Stay productive and focused!</div>
 
+  <!-- Toggle Button -->
+  <button class="toggle-btn" id="toggle-btn">Switch to Task Management</button>
+
+  <!-- Task List Section -->
+  <div id="task-list-container">
+    <h2>Today's Tasks</h2>
+    <input type="text" id="task-input" placeholder="Add a new task...">
+    <button id="add-task-btn">Add Task</button>
+    <ul id="task-list"></ul>
+  </div>
+
   <script>
     const startHour = 11; // Start time: 11 AM
     const endHour = 2; // End time: 2 AM
     const timezoneOffset = 5.5 * 60 * 60 * 1000; // Indian Standard Time (IST)
 
     const quotes = [
-      "Every second counts. Make it matter!",
-      "Stay focused and achieve greatness.",
-      "You are closer to your goals than you think.",
-      "One step at a time, one moment at a time.",
-      "Great things take time. Keep going!"
+      "Feb 1 2025 = 40,000 Income",
+      "Be A Boss!!",
+      "Just Do It!",
+      "Money | Power | Status | Postion ",
+      "Dont Believe In Luck"
     ];
 
     function getCurrentISTTime() {
@@ -114,11 +201,9 @@
 
       const end = new Date(currentTime);
       if (currentTime.getHours() < startHour) {
-        // Adjust for cases before 11 AM (use yesterday's start time)
         start.setDate(start.getDate() - 1);
         end.setDate(start.getDate() + 1);
       } else if (currentTime.getHours() >= startHour) {
-        // Adjust for cases after 11 AM
         end.setDate(start.getDate() + 1);
       }
       end.setHours(endHour, 0, 0, 0);
@@ -147,8 +232,7 @@
       const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
       const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
       const seconds = String(totalSeconds % 60).padStart(2, "0");
-      const milliseconds = String(ms % 1000).padStart(3, "0");
-      return `${hours}:${minutes}:${seconds}:${milliseconds}`;
+      return `${hours}:${minutes}:${seconds}`; // Display hours:minutes:seconds
     }
 
     function updateTimer() {
@@ -166,7 +250,7 @@
           ? `Time Left: ${formatTime(remainingTime)}`
           : "Timer Ended. Great job today!";
 
-      setTimeout(updateTimer, 50); // Update every 50ms for smooth countdown
+      setTimeout(updateTimer, 1000); // Update every second for real-time countdown
     }
 
     function updateQuote() {
@@ -174,10 +258,90 @@
       document.getElementById("motivational-quote").textContent = randomQuote;
     }
 
-    // Initialize
+    // Initialize Timer
     updateTimer();
     updateQuote();
     setInterval(updateQuote, 60000 * 60); // Update quote every hour
+
+    // Task List Functionality
+    function loadTasks() {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      const taskList = document.getElementById("task-list");
+      taskList.innerHTML = '';
+      tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.classList.add("task-item");
+        li.innerHTML = `
+          <input type="checkbox" class="task-checkbox" ${task.done ? "checked" : ""} data-id="${task.id}">
+          <span>${task.text}</span>
+          <button class="delete-btn" data-id="${task.id}">Delete</button>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    function addTask(taskText) {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      const task = { id: Date.now(), text: taskText, done: false };
+      tasks.push(task);
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      loadTasks();
+    }
+
+    function deleteTask(taskId) {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      const updatedTasks = tasks.filter(task => task.id !== taskId);
+      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+      loadTasks();
+    }
+
+    function toggleTaskCompletion(taskId) {
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      const updatedTasks = tasks.map(task => 
+        task.id === taskId ? { ...task, done: !task.done } : task
+      );
+      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+      loadTasks();
+    }
+
+    // Add task functionality
+    document.getElementById("add-task-btn").addEventListener("click", () => {
+      const taskText = document.getElementById("task-input").value.trim();
+      if (taskText) {
+        addTask(taskText);
+        document.getElementById("task-input").value = ''; // Clear input after adding
+      }
+    });
+
+    // Delete task functionality
+    document.getElementById("task-list").addEventListener("click", (event) => {
+      if (event.target.classList.contains("delete-btn")) {
+        const taskId = parseInt(event.target.dataset.id, 10);
+        deleteTask(taskId);
+      }
+    });
+
+    // Toggle Views for Task Management
+    let isTaskViewActive = false;
+    document.getElementById("toggle-btn").addEventListener("click", () => {
+      isTaskViewActive = !isTaskViewActive;
+      document.getElementById("task-list-container").style.display = isTaskViewActive ? "block" : "none";
+      document.getElementById("toggle-btn").textContent = isTaskViewActive
+        ? "Switch to Focus Timer"
+        : "Switch to Task Management";
+
+      if (isTaskViewActive) {
+        loadTasks();
+      }
+    });
+
+    // Task Completion toggle
+    document.getElementById("task-list").addEventListener("change", (event) => {
+      if (event.target.classList.contains("task-checkbox")) {
+        const taskId = parseInt(event.target.dataset.id, 10);
+        toggleTaskCompletion(taskId);
+      }
+    });
   </script>
 </body>
 </html>
