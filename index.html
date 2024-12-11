@@ -177,8 +177,9 @@
   </div>
 
   <script>
-    const startHour = 11; // Start time: 11 AM
-    const endHour = 2; // End time: 2 AM
+    const startHour = 8; // Start time: 8 AM
+    const startMinute = 40; // Start time: 8:40 AM
+    const endHour = 1; // End time: 1 AM
     const timezoneOffset = 5.5 * 60 * 60 * 1000; // Indian Standard Time (IST)
 
     const quotes = [
@@ -197,10 +198,10 @@
 
     function calculateProgress(currentTime) {
       const start = new Date(currentTime);
-      start.setHours(startHour, 0, 0, 0);
+      start.setHours(startHour, startMinute, 0, 0);
 
       const end = new Date(currentTime);
-      if (currentTime.getHours() < startHour) {
+      if (currentTime.getHours() < startHour || (currentTime.getHours() === startHour && currentTime.getMinutes() < startMinute)) {
         start.setDate(start.getDate() - 1);
         end.setDate(start.getDate() + 1);
       } else if (currentTime.getHours() >= startHour) {
@@ -218,9 +219,9 @@
 
     function getBarColor(currentTime) {
       const hour = currentTime.getHours();
-      if (hour >= 11 && hour < 14) {
+      if (hour >= 8 && hour < 13) {
         return "#4caf50"; // Green
-      } else if (hour >= 14 && hour < 18) {
+      } else if (hour >= 13 && hour < 18) {
         return "#ff9800"; // Orange
       } else {
         return "#f44336"; // Red
@@ -271,7 +272,7 @@
       tasks.forEach(task => {
         const li = document.createElement("li");
         li.classList.add("task-item");
-        li.innerHTML = `
+        li.innerHTML = `        
           <input type="checkbox" class="task-checkbox" ${task.done ? "checked" : ""} data-id="${task.id}">
           <span>${task.text}</span>
           <button class="delete-btn" data-id="${task.id}">Delete</button>
@@ -313,35 +314,25 @@
       }
     });
 
-    // Delete task functionality
-    document.getElementById("task-list").addEventListener("click", (event) => {
-      if (event.target.classList.contains("delete-btn")) {
-        const taskId = parseInt(event.target.dataset.id, 10);
-        deleteTask(taskId);
-      }
-    });
-
-    // Toggle Views for Task Management
-    let isTaskViewActive = false;
+    // Toggle Task Management View
     document.getElementById("toggle-btn").addEventListener("click", () => {
-      isTaskViewActive = !isTaskViewActive;
-      document.getElementById("task-list-container").style.display = isTaskViewActive ? "block" : "none";
-      document.getElementById("toggle-btn").textContent = isTaskViewActive
-        ? "Switch to Focus Timer"
-        : "Switch to Task Management";
+      const taskListContainer = document.getElementById("task-list-container");
+      taskListContainer.style.display = taskListContainer.style.display === "none" ? "block" : "none";
+    });
 
-      if (isTaskViewActive) {
-        loadTasks();
+    // Task Delete and Complete functionality
+    document.getElementById("task-list").addEventListener("click", (e) => {
+      if (e.target.classList.contains("delete-btn")) {
+        deleteTask(Number(e.target.getAttribute("data-id")));
+      }
+      if (e.target.classList.contains("task-checkbox")) {
+        toggleTaskCompletion(Number(e.target.getAttribute("data-id")));
       }
     });
 
-    // Task Completion toggle
-    document.getElementById("task-list").addEventListener("change", (event) => {
-      if (event.target.classList.contains("task-checkbox")) {
-        const taskId = parseInt(event.target.dataset.id, 10);
-        toggleTaskCompletion(taskId);
-      }
-    });
+    // Load tasks on page load
+    loadTasks();
+
   </script>
 </body>
 </html>
